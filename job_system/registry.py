@@ -22,8 +22,6 @@ class JobStatus(Enum):
     COMPLETED = "completed"
     FAILED = "failed"
     CANCELLED = "cancelled"
-    GENERATED = "generated"
-    UPLOADING = "uploading"
 
 
 class JobRegistry:

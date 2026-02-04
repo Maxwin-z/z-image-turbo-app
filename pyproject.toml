@@ -12,11 +12,4 @@ dependencies = [
     "uvicorn>=0.27.0",
     "websockets>=12.0",
     "httpx>=0.28.1",
-    "numpy",
-    "opencv-python",
-    "basicsr>=1.4.2",
-    "realesrgan",
 ]
-
-[tool.uv.sources]
-realesrgan = { path = "local_packages/realesrgan" }

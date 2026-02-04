@@ -74,6 +74,7 @@ A high-performance Text-to-Image generation server using Stable Diffusion and We
 """,
     version="1.0.0",
     lifespan=lifespan,
+    openapi_url="/openapi.json",
     docs_url="/docs",
     redoc_url="/redoc"
 )

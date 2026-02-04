@@ -239,8 +239,7 @@ async def handle_get_client_jobs(websocket: WebSocket, message: dict, client_id:
         jobs_list.append(job_info)
         
         # Re-subscribe to pending/processing jobs
-        if job["status"] in (JobStatus.PENDING.value, JobStatus.PROCESSING.value, 
-                              JobStatus.GENERATED.value, JobStatus.UPLOADING.value):
+        if job["status"] in (JobStatus.PENDING.value, JobStatus.PROCESSING.value):
             ws_manager.subscribe(job["id"], websocket)
     
     response = {

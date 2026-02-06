@@ -5,7 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
 import os
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect, HTTPException, Depends
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, HTMLResponse
 from pydantic import BaseModel, Field
 from typing import Optional, Dict, Any
 
@@ -90,6 +90,16 @@ app.add_middleware(
 
 # Include WebSocket router
 app.include_router(websocket_router, prefix="/api", tags=["WebSocket"])
+
+# --- Serve Frontend ---
+
+_INDEX_HTML = os.path.join(os.path.dirname(os.path.abspath(__file__)), "index.html")
+
+@app.get("/", response_class=HTMLResponse, tags=["Frontend"])
+async def serve_frontend():
+    """Serve the single-page frontend."""
+    with open(_INDEX_HTML, "r", encoding="utf-8") as f:
+        return HTMLResponse(content=f.read())
 
 @app.get("/api/health", response_model=HealthResponse, tags=["System"])
 async def health_check():

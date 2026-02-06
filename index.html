@@ -1,0 +1,913 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Z-Image-Turbo</title>
+<style>
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  :root{
+    --c-bg:#fafafa;
+    --c-surface:#fff;
+    --c-border:#e5e5e5;
+    --c-text:#1a1a1a;
+    --c-text2:#666;
+    --c-primary:#0d9488;
+    --c-primary-hover:#0f766e;
+    --c-danger:#ef4444;
+    --c-progress-bg:#e5e7eb;
+    --c-progress-fill:#0d9488;
+    --radius:8px;
+    --font:-apple-system,BlinkMacSystemFont,"Noto Sans SC","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+  }
+  body{
+    font-family:var(--font);
+    background:var(--c-bg);
+    color:var(--c-text);
+    line-height:1.6;
+    min-height:100vh;
+  }
+
+  /* Layout */
+  .app{
+    max-width:680px;
+    margin:0 auto;
+    padding:3rem 1.5rem 4rem;
+  }
+
+  /* Header */
+  .header{
+    margin-bottom:2.5rem;
+  }
+  .header h1{
+    font-size:1.5rem;
+    font-weight:600;
+    letter-spacing:-0.02em;
+  }
+  .header p{
+    color:var(--c-text2);
+    font-size:0.875rem;
+    margin-top:0.25rem;
+  }
+
+  /* Form sections */
+  .section{
+    margin-bottom:1.5rem;
+  }
+  .section-label{
+    display:block;
+    font-size:0.8125rem;
+    font-weight:500;
+    color:var(--c-text2);
+    margin-bottom:0.5rem;
+  }
+
+  /* Textarea */
+  .prompt-input{
+    width:100%;
+    min-height:100px;
+    padding:0.75rem 1rem;
+    border:1px solid var(--c-border);
+    border-radius:var(--radius);
+    font-family:var(--font);
+    font-size:0.9375rem;
+    line-height:1.6;
+    resize:vertical;
+    background:var(--c-surface);
+    color:var(--c-text);
+    transition:border-color 0.15s;
+  }
+  .prompt-input:focus{
+    outline:none;
+    border-color:var(--c-primary);
+  }
+
+  /* Size selector */
+  .size-options{
+    display:flex;
+    gap:0.5rem;
+    flex-wrap:wrap;
+  }
+  .size-btn{
+    padding:0.5rem 1rem;
+    border:1px solid var(--c-border);
+    border-radius:var(--radius);
+    background:var(--c-surface);
+    font-family:var(--font);
+    font-size:0.8125rem;
+    color:var(--c-text);
+    cursor:pointer;
+    transition:border-color 0.15s,background 0.15s;
+    user-select:none;
+  }
+  .size-btn:hover{
+    border-color:var(--c-primary);
+  }
+  .size-btn.active{
+    border-color:var(--c-primary);
+    background:var(--c-primary);
+    color:#fff;
+  }
+
+  /* Advanced toggle */
+  .advanced-toggle{
+    display:inline-flex;
+    align-items:center;
+    gap:0.375rem;
+    font-size:0.8125rem;
+    color:var(--c-text2);
+    cursor:pointer;
+    user-select:none;
+    background:none;
+    border:none;
+    font-family:var(--font);
+    padding:0;
+  }
+  .advanced-toggle:hover{
+    color:var(--c-text);
+  }
+  .advanced-toggle svg{
+    width:14px;
+    height:14px;
+    transition:transform 0.2s;
+  }
+  .advanced-toggle.open svg{
+    transform:rotate(90deg);
+  }
+
+  /* Advanced panel */
+  .advanced-panel{
+    display:none;
+    margin-top:0.75rem;
+    padding:1rem;
+    border:1px solid var(--c-border);
+    border-radius:var(--radius);
+    background:var(--c-surface);
+  }
+  .advanced-panel.open{
+    display:block;
+  }
+  .field-row{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:1rem;
+    margin-bottom:1rem;
+  }
+  .field-row:last-child{
+    margin-bottom:0;
+  }
+  .field label{
+    display:block;
+    font-size:0.75rem;
+    font-weight:500;
+    color:var(--c-text2);
+    margin-bottom:0.25rem;
+  }
+  .field input,.field select{
+    width:100%;
+    padding:0.5rem 0.75rem;
+    border:1px solid var(--c-border);
+    border-radius:6px;
+    font-family:var(--font);
+    font-size:0.8125rem;
+    background:var(--c-bg);
+    color:var(--c-text);
+    transition:border-color 0.15s;
+  }
+  .field input:focus,.field select:focus{
+    outline:none;
+    border-color:var(--c-primary);
+  }
+
+  /* Generate button */
+  .generate-btn{
+    width:100%;
+    padding:0.75rem 1.5rem;
+    background:var(--c-primary);
+    color:#fff;
+    border:none;
+    border-radius:var(--radius);
+    font-family:var(--font);
+    font-size:0.9375rem;
+    font-weight:500;
+    cursor:pointer;
+    transition:background 0.15s;
+  }
+  .generate-btn:hover:not(:disabled){
+    background:var(--c-primary-hover);
+  }
+  .generate-btn:disabled{
+    opacity:0.6;
+    cursor:not-allowed;
+  }
+
+  /* Progress */
+  .progress-area{
+    display:none;
+    margin-top:1.5rem;
+  }
+  .progress-area.visible{
+    display:block;
+  }
+  .progress-status{
+    font-size:0.8125rem;
+    color:var(--c-text2);
+    margin-bottom:0.5rem;
+  }
+  .progress-bar-wrap{
+    width:100%;
+    height:6px;
+    background:var(--c-progress-bg);
+    border-radius:3px;
+    overflow:hidden;
+  }
+  .progress-bar-fill{
+    height:100%;
+    width:0%;
+    background:var(--c-progress-fill);
+    border-radius:3px;
+    transition:width 0.3s;
+  }
+  .progress-detail{
+    font-size:0.75rem;
+    color:var(--c-text2);
+    margin-top:0.375rem;
+  }
+
+  /* Result */
+  .result-area{
+    display:none;
+    margin-top:2rem;
+  }
+  .result-area.visible{
+    display:block;
+  }
+  .result-label{
+    font-size:0.8125rem;
+    font-weight:500;
+    color:var(--c-text2);
+    margin-bottom:0.75rem;
+  }
+  .result-img{
+    width:100%;
+    border-radius:var(--radius);
+    border:1px solid var(--c-border);
+    background:var(--c-surface);
+  }
+
+  /* Error */
+  .error-msg{
+    display:none;
+    margin-top:1rem;
+    padding:0.75rem 1rem;
+    background:#fef2f2;
+    border:1px solid #fecaca;
+    border-radius:var(--radius);
+    color:var(--c-danger);
+    font-size:0.8125rem;
+  }
+  .error-msg.visible{
+    display:block;
+  }
+
+  /* Status dot */
+  .ws-status{
+    display:inline-flex;
+    align-items:center;
+    gap:0.375rem;
+    font-size:0.75rem;
+    color:var(--c-text2);
+  }
+  .ws-dot{
+    width:6px;
+    height:6px;
+    border-radius:50%;
+    background:#d1d5db;
+  }
+  .ws-dot.connected{
+    background:#22c55e;
+  }
+
+  /* API Docs */
+  .docs{
+    margin-top:4rem;
+    padding-top:2.5rem;
+    border-top:1px solid var(--c-border);
+  }
+  .docs h2{
+    font-size:1.25rem;
+    font-weight:600;
+    margin-bottom:1.5rem;
+    letter-spacing:-0.01em;
+  }
+  .docs h3{
+    font-size:1rem;
+    font-weight:600;
+    margin:2rem 0 0.75rem;
+    padding-bottom:0.5rem;
+    border-bottom:1px solid var(--c-border);
+  }
+  .docs h4{
+    font-size:0.875rem;
+    font-weight:600;
+    margin:1.25rem 0 0.5rem;
+  }
+  .docs p{
+    font-size:0.8125rem;
+    color:var(--c-text2);
+    margin-bottom:0.75rem;
+    line-height:1.7;
+  }
+  .docs code{
+    font-family:"SF Mono","Fira Code","Fira Mono",Menlo,Consolas,monospace;
+    font-size:0.8em;
+    background:#f1f5f9;
+    padding:0.15em 0.4em;
+    border-radius:4px;
+    color:#0f172a;
+  }
+  .docs pre{
+    margin:0.5rem 0 1rem;
+    padding:1rem;
+    background:#0f172a;
+    border-radius:var(--radius);
+    overflow-x:auto;
+    line-height:1.6;
+  }
+  .docs pre code{
+    background:none;
+    padding:0;
+    border-radius:0;
+    font-size:0.8125rem;
+    color:#e2e8f0;
+  }
+  /* Syntax colors */
+  .hl-key{color:#7dd3fc}
+  .hl-str{color:#86efac}
+  .hl-num{color:#fde68a}
+  .hl-kw{color:#c4b5fd}
+  .hl-cmt{color:#64748b;font-style:italic}
+  .hl-fn{color:#93c5fd}
+  .hl-method{color:#67e8f9}
+
+  .docs table{
+    width:100%;
+    border-collapse:collapse;
+    margin:0.5rem 0 1rem;
+    font-size:0.8125rem;
+  }
+  .docs th{
+    text-align:left;
+    padding:0.5rem 0.75rem;
+    background:#f1f5f9;
+    border:1px solid var(--c-border);
+    font-weight:500;
+    color:var(--c-text2);
+  }
+  .docs td{
+    padding:0.5rem 0.75rem;
+    border:1px solid var(--c-border);
+    vertical-align:top;
+  }
+  .docs .flow{
+    font-family:"SF Mono","Fira Code",monospace;
+    font-size:0.8125rem;
+    background:#f8fafc;
+    border:1px solid var(--c-border);
+    border-radius:var(--radius);
+    padding:1rem 1.25rem;
+    margin:0.5rem 0 1rem;
+    line-height:1.8;
+    color:var(--c-text);
+  }
+
+  /* Responsive */
+  @media(max-width:480px){
+    .app{padding:2rem 1rem 3rem}
+    .field-row{grid-template-columns:1fr}
+    .docs pre{padding:0.75rem}
+    .docs table{font-size:0.75rem}
+  }
+
+  @media(prefers-reduced-motion:reduce){
+    *,*::before,*::after{
+      transition-duration:0.01ms !important;
+    }
+  }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <!-- Header -->
+  <div class="header">
+    <div style="display:flex;align-items:center;justify-content:space-between">
+      <h1>Z-Image-Turbo</h1>
+      <span class="ws-status">
+        <span class="ws-dot" id="wsDot"></span>
+        <span id="wsLabel">未连接</span>
+      </span>
+    </div>
+    <p>文生图 — 输入提示词，生成图片</p>
+  </div>
+
+  <!-- Prompt -->
+  <div class="section">
+    <label class="section-label" for="prompt">提示词</label>
+    <textarea
+      class="prompt-input"
+      id="prompt"
+    >东方水彩插画，精细线描，莫兰迪色系，纸张颗粒质感，大面积留白。一位戴草帽的女孩蹲坐在石阶上，手托下巴远眺，白衬衫灰蓝长裙凉鞋，身后是色彩丰富的超大复古登山包，身旁一只黑白花色小狗吐着舌头。治愈系，旅行者氛围，杰作，8K</textarea>
+  </div>
+
+  <!-- Size -->
+  <div class="section">
+    <span class="section-label">图片尺寸</span>
+    <div class="size-options" id="sizeOptions">
+      <button class="size-btn" data-w="800" data-h="600">800 × 600</button>
+      <button class="size-btn" data-w="600" data-h="800">600 × 800</button>
+      <button class="size-btn active" data-w="512" data-h="512">512 × 512</button>
+    </div>
+  </div>
+
+  <!-- Advanced -->
+  <div class="section">
+    <button class="advanced-toggle" id="advToggle" type="button">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+      高级设置
+    </button>
+    <div class="advanced-panel" id="advPanel">
+      <div class="field-row">
+        <div class="field">
+          <label for="steps">推理步数</label>
+          <input type="number" id="steps" value="9" min="1" max="50">
+        </div>
+        <div class="field">
+          <label for="guidanceScale">引导强度</label>
+          <input type="number" id="guidanceScale" value="0.0" min="0" max="20" step="0.1">
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label for="seed">随机种子</label>
+          <input type="number" id="seed" value="42" min="0">
+        </div>
+        <div class="field">
+          <label for="modelType">模型类型</label>
+          <select id="modelType">
+            <option value="uint4" selected>uint4</option>
+            <option value="int8">int8</option>
+          </select>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Generate -->
+  <button class="generate-btn" id="generateBtn">生成图片</button>
+
+  <!-- Error -->
+  <div class="error-msg" id="errorMsg"></div>
+
+  <!-- Progress -->
+  <div class="progress-area" id="progressArea">
+    <div class="progress-status" id="progressStatus">准备中...</div>
+    <div class="progress-bar-wrap">
+      <div class="progress-bar-fill" id="progressFill"></div>
+    </div>
+    <div class="progress-detail" id="progressDetail"></div>
+  </div>
+
+  <!-- Result -->
+  <div class="result-area" id="resultArea">
+    <div class="result-label">生成结果</div>
+    <img class="result-img" id="resultImg" alt="生成的图片">
+  </div>
+
+  <!-- API Documentation -->
+  <div class="docs">
+    <h2>API 参考</h2>
+
+    <h3>REST 接口</h3>
+
+    <h4>健康检查</h4>
+    <pre><code><span class="hl-method">GET</span> /api/health</code></pre>
+    <p>响应：</p>
+    <pre><code>{ <span class="hl-key">"status"</span>: <span class="hl-str">"ok"</span> }</code></pre>
+
+    <h4>获取图片</h4>
+    <pre><code><span class="hl-method">GET</span> /api/image/{filename}</code></pre>
+    <p>返回生成的图片文件（PNG）。</p>
+
+    <h3>WebSocket API</h3>
+    <pre><code><span class="hl-method">WebSocket</span> /api/ws?client_id={client_id}</code></pre>
+    <p><code>client_id</code>（可选）：客户端标识符。使用相同的 <code>client_id</code> 重连时，订阅关系会保持。所有消息均为 JSON 格式，客户端发送带有 <code>type</code> 字段的消息，服务器返回相应的响应。</p>
+
+    <h3>图片生成完整流程</h3>
+
+    <h4>第一步：连接 WebSocket</h4>
+    <pre><code><span class="hl-kw">const</span> ws = <span class="hl-kw">new</span> <span class="hl-fn">WebSocket</span>(<span class="hl-str">"ws://localhost:8004/api/ws?client_id=my-client-001"</span>);</code></pre>
+
+    <h4>第二步：发送 <code>create_job</code> 消息</h4>
+    <pre><code>{
+  <span class="hl-key">"type"</span>: <span class="hl-str">"create_job"</span>,
+  <span class="hl-key">"task_type"</span>: <span class="hl-str">"text_to_image"</span>,
+  <span class="hl-key">"request_id"</span>: <span class="hl-str">"req-001"</span>,
+  <span class="hl-key">"params"</span>: {
+    <span class="hl-key">"prompt"</span>: <span class="hl-str">"a cute cat wearing sunglasses, digital art"</span>,
+    <span class="hl-key">"width"</span>: <span class="hl-num">1024</span>,
+    <span class="hl-key">"height"</span>: <span class="hl-num">1024</span>,
+    <span class="hl-key">"steps"</span>: <span class="hl-num">9</span>,
+    <span class="hl-key">"guidance_scale"</span>: <span class="hl-num">0.0</span>,
+    <span class="hl-key">"seed"</span>: <span class="hl-num">42</span>,
+    <span class="hl-key">"model_type"</span>: <span class="hl-str">"uint4"</span>
+  }
+}</code></pre>
+
+    <p>参数说明：</p>
+    <table>
+      <thead>
+        <tr><th>字段</th><th>类型</th><th>默认值</th><th>说明</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><code>prompt</code></td><td>string</td><td>必填</td><td>图片的文本描述</td></tr>
+        <tr><td><code>width</code></td><td>int</td><td>1024</td><td>图片宽度（像素）</td></tr>
+        <tr><td><code>height</code></td><td>int</td><td>1024</td><td>图片高度（像素）</td></tr>
+        <tr><td><code>steps</code></td><td>int</td><td>9</td><td>推理步数（越多质量越高，速度越慢）</td></tr>
+        <tr><td><code>guidance_scale</code></td><td>float</td><td>0.0</td><td>无分类器引导比例</td></tr>
+        <tr><td><code>seed</code></td><td>int</td><td>42</td><td>随机种子，用于结果复现</td></tr>
+        <tr><td><code>model_type</code></td><td>string</td><td>"uint4"</td><td>量化类型：<code>uint4</code> 或 <code>int8</code></td></tr>
+      </tbody>
+    </table>
+
+    <h4>第三步：接收状态更新</h4>
+    <p>服务器按以下顺序推送消息：</p>
+
+    <p><strong>1) 任务已创建</strong></p>
+    <pre><code>{
+  <span class="hl-key">"type"</span>: <span class="hl-str">"job_status"</span>,
+  <span class="hl-key">"job_id"</span>: <span class="hl-str">"abc123..."</span>,
+  <span class="hl-key">"status"</span>: <span class="hl-str">"pending"</span>,
+  <span class="hl-key">"request_id"</span>: <span class="hl-str">"req-001"</span>
+}</code></pre>
+
+    <p><strong>2) 开始处理</strong></p>
+    <pre><code>{
+  <span class="hl-key">"type"</span>: <span class="hl-str">"job_status"</span>,
+  <span class="hl-key">"job_id"</span>: <span class="hl-str">"abc123..."</span>,
+  <span class="hl-key">"status"</span>: <span class="hl-str">"processing"</span>,
+  <span class="hl-key">"request_id"</span>: <span class="hl-str">"req-001"</span>
+}</code></pre>
+
+    <p><strong>3) 进度更新（每个推理步骤）</strong></p>
+    <pre><code>{
+  <span class="hl-key">"type"</span>: <span class="hl-str">"job_progress"</span>,
+  <span class="hl-key">"job_id"</span>: <span class="hl-str">"abc123..."</span>,
+  <span class="hl-key">"progress"</span>: {
+    <span class="hl-key">"stage"</span>: <span class="hl-str">"generating"</span>,
+    <span class="hl-key">"percentage"</span>: <span class="hl-num">44</span>,
+    <span class="hl-key">"current_step"</span>: <span class="hl-num">4</span>,
+    <span class="hl-key">"total_steps"</span>: <span class="hl-num">9</span>,
+    <span class="hl-key">"elapsed"</span>: <span class="hl-str">"00:15"</span>,
+    <span class="hl-key">"remaining"</span>: <span class="hl-str">"00:18"</span>,
+    <span class="hl-key">"speed"</span>: <span class="hl-str">"3.75s/it"</span>
+  }
+}</code></pre>
+
+    <p><strong>4) 任务完成</strong></p>
+    <pre><code>{
+  <span class="hl-key">"type"</span>: <span class="hl-str">"job_status"</span>,
+  <span class="hl-key">"job_id"</span>: <span class="hl-str">"abc123..."</span>,
+  <span class="hl-key">"status"</span>: <span class="hl-str">"completed"</span>,
+  <span class="hl-key">"result"</span>: {
+    <span class="hl-key">"filename"</span>: <span class="hl-str">"20260204-a-cute-cat-abc12345.png"</span>,
+    <span class="hl-key">"path"</span>: <span class="hl-str">"outputs/20260204-a-cute-cat-abc12345.png"</span>
+  },
+  <span class="hl-key">"request_id"</span>: <span class="hl-str">"req-001"</span>
+}</code></pre>
+
+    <h4>第四步：获取图片</h4>
+    <pre><code><span class="hl-method">GET</span> /api/image/20260204-a-cute-cat-abc12345.png</code></pre>
+
+    <h3>完整 JavaScript 示例</h3>
+    <pre><code><span class="hl-kw">const</span> ws = <span class="hl-kw">new</span> <span class="hl-fn">WebSocket</span>(<span class="hl-str">"ws://localhost:8004/api/ws?client_id=my-client-001"</span>);
+
+ws.<span class="hl-fn">onopen</span> = () =&gt; {
+  ws.<span class="hl-fn">send</span>(JSON.<span class="hl-fn">stringify</span>({
+    <span class="hl-key">type</span>: <span class="hl-str">"create_job"</span>,
+    <span class="hl-key">task_type</span>: <span class="hl-str">"text_to_image"</span>,
+    <span class="hl-key">request_id</span>: <span class="hl-str">"req-001"</span>,
+    <span class="hl-key">params</span>: {
+      <span class="hl-key">prompt</span>: <span class="hl-str">"a cute cat wearing sunglasses, digital art"</span>,
+      <span class="hl-key">width</span>: <span class="hl-num">1024</span>,
+      <span class="hl-key">height</span>: <span class="hl-num">1024</span>,
+      <span class="hl-key">steps</span>: <span class="hl-num">9</span>,
+      <span class="hl-key">guidance_scale</span>: <span class="hl-num">0.0</span>,
+      <span class="hl-key">seed</span>: <span class="hl-num">42</span>
+    }
+  }));
+};
+
+ws.<span class="hl-fn">onmessage</span> = (<span class="hl-kw">event</span>) =&gt; {
+  <span class="hl-kw">const</span> msg = JSON.<span class="hl-fn">parse</span>(event.data);
+
+  <span class="hl-kw">switch</span> (msg.type) {
+    <span class="hl-kw">case</span> <span class="hl-str">"job_status"</span>:
+      console.<span class="hl-fn">log</span>(<span class="hl-str">`[${msg.status}]`</span>, msg.job_id);
+      <span class="hl-kw">if</span> (msg.status === <span class="hl-str">"completed"</span>) {
+        <span class="hl-kw">const</span> filename = msg.result.filename;
+        console.<span class="hl-fn">log</span>(<span class="hl-str">`图片就绪: /api/image/${filename}`</span>);
+      }
+      <span class="hl-kw">break</span>;
+
+    <span class="hl-kw">case</span> <span class="hl-str">"job_progress"</span>:
+      console.<span class="hl-fn">log</span>(<span class="hl-str">`进度: ${msg.progress.percentage}%`</span>);
+      <span class="hl-kw">break</span>;
+
+    <span class="hl-kw">case</span> <span class="hl-str">"error"</span>:
+      console.<span class="hl-fn">error</span>(<span class="hl-str">"错误:"</span>, msg.message);
+      <span class="hl-kw">break</span>;
+  }
+};</code></pre>
+
+    <h3>其他 WebSocket 消息</h3>
+
+    <h4>查询任务状态</h4>
+    <pre><code>{
+  <span class="hl-key">"type"</span>: <span class="hl-str">"get_status"</span>,
+  <span class="hl-key">"job_id"</span>: <span class="hl-str">"abc123..."</span>,
+  <span class="hl-key">"request_id"</span>: <span class="hl-str">"req-002"</span>
+}</code></pre>
+
+    <h4>取消任务</h4>
+    <pre><code>{
+  <span class="hl-key">"type"</span>: <span class="hl-str">"cancel_job"</span>,
+  <span class="hl-key">"job_id"</span>: <span class="hl-str">"abc123..."</span>,
+  <span class="hl-key">"request_id"</span>: <span class="hl-str">"req-003"</span>
+}</code></pre>
+    <p>仅 <code>pending</code> 或 <code>processing</code> 状态的任务可以被取消。</p>
+
+    <h4>获取客户端所有任务</h4>
+    <pre><code>{
+  <span class="hl-key">"type"</span>: <span class="hl-str">"get_client_jobs"</span>,
+  <span class="hl-key">"request_id"</span>: <span class="hl-str">"req-004"</span>
+}</code></pre>
+    <p>需要在 WebSocket 连接时设置 <code>client_id</code>。返回：</p>
+    <pre><code>{
+  <span class="hl-key">"type"</span>: <span class="hl-str">"client_jobs"</span>,
+  <span class="hl-key">"jobs"</span>: [
+    {
+      <span class="hl-key">"job_id"</span>: <span class="hl-str">"abc123..."</span>,
+      <span class="hl-key">"task_type"</span>: <span class="hl-str">"text_to_image"</span>,
+      <span class="hl-key">"status"</span>: <span class="hl-str">"completed"</span>,
+      <span class="hl-key">"created_at"</span>: <span class="hl-num">1738627200.0</span>,
+      <span class="hl-key">"result"</span>: { <span class="hl-key">"filename"</span>: <span class="hl-str">"..."</span>, <span class="hl-key">"path"</span>: <span class="hl-str">"..."</span> }
+    }
+  ],
+  <span class="hl-key">"request_id"</span>: <span class="hl-str">"req-004"</span>
+}</code></pre>
+
+    <h3>任务状态流转</h3>
+    <div class="flow">
+pending → processing → completed<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;↘ cancelled<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;↘ failed
+    </div>
+
+    <table>
+      <thead>
+        <tr><th>状态</th><th>说明</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><code>pending</code></td><td>已入队，等待执行</td></tr>
+        <tr><td><code>processing</code></td><td>GPU 正在生成图片</td></tr>
+        <tr><td><code>completed</code></td><td>完成，图片可下载</td></tr>
+        <tr><td><code>failed</code></td><td>执行出错</td></tr>
+        <tr><td><code>cancelled</code></td><td>已被客户端取消</td></tr>
+      </tbody>
+    </table>
+
+    <h3>关键特性</h3>
+    <table>
+      <thead>
+        <tr><th>特性</th><th>说明</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>去重</td><td>相同参数会生成相同的 <code>job_id</code>（SHA-256 哈希）。重复请求返回已有任务状态，不会创建新任务。</td></tr>
+        <tr><td>缓存</td><td>已完成的结果会被缓存。使用相同参数再次请求时立即返回缓存结果。</td></tr>
+        <tr><td>断线重连</td><td>使用 <code>client_id</code> 时，订阅关系在断开后保持。重连后调用 <code>get_client_jobs</code> 即可恢复。</td></tr>
+        <tr><td>并发控制</td><td>GPU 操作通过锁串行化执行。最多 4 个任务可同时处理（I/O 操作并行）。</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+</div>
+
+<script>
+(function() {
+  'use strict';
+
+  // --- URL derivation ---
+  const loc = window.location;
+  const basePath = loc.pathname.replace(/\/+$/, '');
+  const wsProtocol = loc.protocol === 'https:' ? 'wss:' : 'ws:';
+  const wsUrl = wsProtocol + '//' + loc.host + basePath + '/api/ws';
+  const apiBase = loc.protocol + '//' + loc.host + basePath;
+
+  // --- DOM refs ---
+  const $prompt = document.getElementById('prompt');
+  const $sizeOptions = document.getElementById('sizeOptions');
+  const $advToggle = document.getElementById('advToggle');
+  const $advPanel = document.getElementById('advPanel');
+  const $steps = document.getElementById('steps');
+  const $guidanceScale = document.getElementById('guidanceScale');
+  const $seed = document.getElementById('seed');
+  const $modelType = document.getElementById('modelType');
+  const $generateBtn = document.getElementById('generateBtn');
+  const $errorMsg = document.getElementById('errorMsg');
+  const $progressArea = document.getElementById('progressArea');
+  const $progressStatus = document.getElementById('progressStatus');
+  const $progressFill = document.getElementById('progressFill');
+  const $progressDetail = document.getElementById('progressDetail');
+  const $resultArea = document.getElementById('resultArea');
+  const $resultImg = document.getElementById('resultImg');
+  const $wsDot = document.getElementById('wsDot');
+  const $wsLabel = document.getElementById('wsLabel');
+
+  // --- State ---
+  let selectedWidth = 512;
+  let selectedHeight = 512;
+  let ws = null;
+  let clientId = 'web-' + Math.random().toString(36).slice(2, 10);
+  let generating = false;
+
+  // --- Size buttons ---
+  $sizeOptions.addEventListener('click', function(e) {
+    const btn = e.target.closest('.size-btn');
+    if (!btn) return;
+    $sizeOptions.querySelectorAll('.size-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    selectedWidth = parseInt(btn.dataset.w);
+    selectedHeight = parseInt(btn.dataset.h);
+  });
+
+  // --- Advanced toggle ---
+  $advToggle.addEventListener('click', function() {
+    const open = $advPanel.classList.toggle('open');
+    $advToggle.classList.toggle('open', open);
+  });
+
+  // --- WebSocket ---
+  function connectWS() {
+    const url = wsUrl + '?client_id=' + encodeURIComponent(clientId);
+    ws = new WebSocket(url);
+
+    ws.addEventListener('open', function() {
+      $wsDot.classList.add('connected');
+      $wsLabel.textContent = '已连接';
+    });
+
+    ws.addEventListener('close', function() {
+      $wsDot.classList.remove('connected');
+      $wsLabel.textContent = '已断开';
+      // Auto reconnect
+      setTimeout(connectWS, 3000);
+    });
+
+    ws.addEventListener('error', function() {
+      $wsDot.classList.remove('connected');
+      $wsLabel.textContent = '连接错误';
+    });
+
+    ws.addEventListener('message', function(event) {
+      var msg;
+      try { msg = JSON.parse(event.data); } catch(e) { return; }
+      handleMessage(msg);
+    });
+  }
+
+  function handleMessage(msg) {
+    var type = msg.type;
+
+    if (type === 'job_status') {
+      var status = msg.status;
+
+      if (status === 'pending') {
+        showProgress('任务已创建，等待调度...', 0, '');
+      } else if (status === 'processing') {
+        showProgress('GPU 正在生成图片...', 0, '');
+      } else if (status === 'completed') {
+        var result = msg.result || {};
+        var filename = result.filename;
+        if (filename) {
+          showResult(apiBase + '/api/image/' + encodeURIComponent(filename));
+        }
+        finishGenerating();
+      } else if (status === 'failed') {
+        showError(msg.error || '生成失败');
+        finishGenerating();
+      } else if (status === 'cancelled') {
+        showError('任务已被取消');
+        finishGenerating();
+      }
+
+    } else if (type === 'job_progress') {
+      var progress = msg.progress || {};
+      var stage = progress.stage || '生成中';
+      var step = progress.step || progress.current_step;
+      var total = progress.total_steps;
+      var percent = progress.percent || progress.percentage;
+
+      if (step != null && total != null && total > 0) {
+        var pct = Math.round((step / total) * 100);
+        showProgress(stage, pct, step + ' / ' + total + ' 步');
+      } else if (percent != null) {
+        showProgress(stage, percent, percent + '%');
+      }
+
+    } else if (type === 'error') {
+      showError(msg.message || '发生错误');
+      finishGenerating();
+    }
+  }
+
+  // --- UI helpers ---
+  function showProgress(statusText, percent, detail) {
+    $progressArea.classList.add('visible');
+    $progressStatus.textContent = statusText;
+    $progressFill.style.width = percent + '%';
+    $progressDetail.textContent = detail;
+  }
+
+  function showResult(imgUrl) {
+    $resultArea.classList.add('visible');
+    $resultImg.src = imgUrl;
+    $progressArea.classList.remove('visible');
+  }
+
+  function showError(text) {
+    $errorMsg.textContent = text;
+    $errorMsg.classList.add('visible');
+    $progressArea.classList.remove('visible');
+  }
+
+  function clearFeedback() {
+    $errorMsg.classList.remove('visible');
+    $progressArea.classList.remove('visible');
+    $resultArea.classList.remove('visible');
+    $progressFill.style.width = '0%';
+  }
+
+  function finishGenerating() {
+    generating = false;
+    $generateBtn.disabled = false;
+    $generateBtn.textContent = '生成图片';
+  }
+
+  // --- Generate ---
+  $generateBtn.addEventListener('click', function() {
+    if (generating) return;
+
+    var prompt = $prompt.value.trim();
+    if (!prompt) {
+      showError('请输入提示词');
+      return;
+    }
+
+    if (!ws || ws.readyState !== WebSocket.OPEN) {
+      showError('WebSocket 未连接，请稍后重试');
+      return;
+    }
+
+    generating = true;
+    $generateBtn.disabled = true;
+    $generateBtn.textContent = '生成中...';
+    clearFeedback();
+
+    var requestId = 'req-' + Math.random().toString(36).slice(2, 10);
+
+    var message = {
+      type: 'create_job',
+      task_type: 'text_to_image',
+      request_id: requestId,
+      params: {
+        prompt: prompt,
+        width: selectedWidth,
+        height: selectedHeight,
+        steps: parseInt($steps.value) || 9,
+        guidance_scale: parseFloat($guidanceScale.value) || 0.0,
+        seed: parseInt($seed.value) || 42,
+        model_type: $modelType.value
+      }
+    };
+
+    ws.send(JSON.stringify(message));
+    showProgress('已发送请求...', 0, '');
+  });
+
+  // --- Init ---
+  connectWS();
+})();
+</script>
+</body>
+</html>

@@ -738,7 +738,11 @@ pending → processing → completed<br>
   let selectedWidth = 512;
   let selectedHeight = 512;
   let ws = null;
-  let clientId = 'web-' + Math.random().toString(36).slice(2, 10);
+  let clientId = localStorage.getItem('ws_client_id');
+  if (!clientId) {
+    clientId = 'web-' + Math.random().toString(36).slice(2, 10);
+    localStorage.setItem('ws_client_id', clientId);
+  }
   let generating = false;
 
   // --- Size buttons ---
